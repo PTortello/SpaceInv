@@ -1,0 +1,339 @@
+# TODO enemy fire
+# TODO turtle.mainloop() and turtle.done() in another file as function?
+# TODO change enemies continuous movement to step movement
+#   Try:
+#       turtle.delay(t); t = milliseconds
+#       multithread
+
+import time
+import turtle
+import winsound
+
+# Fire weapon
+def fire_weapon():
+    # Declare weaponstate as a global if it needs changes
+    global weaponstate
+    if weaponstate == 0:
+        winsound.PlaySound(".\Sounds\s_laser.wav", winsound.SND_ASYNC)
+        weaponstate = 1
+        # Move the missile to just above the player
+        x = player.xcor()
+        y = player.ycor() + 10
+        weapon.goto(x, y)
+
+# Check hit
+def is_hit(t1, t2):
+    distance = (
+        (t1.xcor() - t2.xcor()) ** 2 + (t1.ycor() - t2.ycor()) ** 2
+    ) ** 0.5
+    return True if distance < 15 else False
+
+# Life lost
+def lifelost(trtl):
+    global lifes
+    global level
+    global e_alive
+    lifes -= 1
+    level -= 1
+    e_alive = 0
+    for i in range(2):
+        time.sleep(0.5)
+        trtl.hideturtle()
+        screen.update()
+        time.sleep(0.5)
+        trtl.showturtle()
+        screen.update()
+    time.sleep(1)
+    trtl.hideturtle()
+    screen.update()    
+
+# Move player
+def move_right():
+    x = player.xcor()
+    x += playerspeed
+    if x > 235:
+        x = 235
+    player.setx(x)
+
+def move_left():
+    x = player.xcor()
+    x -= playerspeed
+    if x < -235:
+        x = -235
+    player.setx(x)
+
+def pause_game():
+    global gameplay
+    if gameplay:
+        gameplay = False
+        player.hideturtle()
+        weapon.hideturtle()
+        for i in range(enemies_rows):
+            for enemy in enemies[i]:
+                enemy.hideturtle()
+        disc_pen.write(f"Game paused", False, align="center", font=("Courier", 28, "normal"))
+        while not gameplay:
+            screen.onkeypress(pause_game, "Right")
+            screen.onkeypress(pause_game, "Left")
+            screen.onkeypress(pause_game, "space")
+            screen.update()
+    else:
+        gameplay = True
+        time.sleep(0.5)
+        disc_pen.clear()
+        player.showturtle()
+        weapon.showturtle()
+        for i in range(enemies_rows):
+            for enemy in enemies[i]:
+                enemy.showturtle()
+        screen.onkeypress(move_right, "Right")
+        screen.onkeypress(move_left, "Left")
+        screen.onkeypress(fire_weapon, "space")
+
+# Screen set up
+screen = turtle.Screen()
+screen.title("Space Invaders")
+screen.setup(width = 700, height = 800)
+
+# Register shapes
+screen.register_shape(".\Images\_player.gif")
+screen.register_shape(".\Images\_enemy_1.gif")
+screen.register_shape(".\Images\_enemy_2.gif")
+screen.register_shape(".\Images\_enemy_3.gif")
+
+# Main game loop
+gameplay = True     # Set not pause condition
+new_game = True
+level = 1
+lifes = 2
+gameover = False
+while not gameover:
+
+    # Screen
+    screen.bgcolor("black")
+    screen.tracer(0)
+
+    # Border
+    border_pen = turtle.Turtle()
+    border_pen.speed(0)
+    border_pen.hideturtle()
+    border_pen.color("white")
+    border_pen.pensize(3)
+    border_pen.penup()
+    border_pen.goto(-250, -350)
+    border_pen.pendown()
+    v = -100
+    for side in range(4):
+        border_pen.fd(600 + v)
+        border_pen.lt(90)
+        v *= -1
+
+    # Disclaimer
+    disc_pen = turtle.Turtle()
+    disc_pen.speed(0)
+    disc_pen.hideturtle()
+    disc_pen.color("white")
+    disc_pen.penup()
+    disc_pen.goto(0, 0)
+
+    # Score
+    score_pen = turtle.Turtle()
+    score_pen.speed(0)
+    score_pen.hideturtle()
+    score_pen.color("white")
+    score_pen.penup()
+    score_pen.goto(0, 350)
+    scorecor = []
+    with open ('score.ttl', "r") as f:
+        for line in f:
+            scorecor.append(int(line.strip()))
+    if new_game:
+        new_game = False
+        scorecor[0] = 0
+        with open ('score.ttl', "w") as f:
+            f.write(str(scorecor[0]) + "\n" + str(scorecor[1]))
+    score_str = f"Score: {scorecor[0]}\t\t\tRecord: {scorecor[1]}"
+    score_pen.write(score_str, False, align="center", font=("Courier", 12, "normal"))
+
+    # Player
+    player = turtle.Turtle()
+    player.speed(0)
+    player.shape(".\Images\_player.gif")
+    player.penup()
+    player.goto(0, -300)
+    playerspeed = 15
+
+    # Player lifes
+    life1 = turtle.Turtle()
+    life1.speed(0)
+    life1.shape(".\Images\_player.gif")
+    life1.penup()
+    life1.goto(-230, -330)
+    if lifes < 1:
+        life1.hideturtle()
+    life2 = turtle.Turtle()
+    life2.speed(0)
+    life2.shape(".\Images\_player.gif")
+    life2.penup()
+    life2.goto(-200, -330)
+    if lifes < 2:
+        life2.hideturtle()
+
+    # Player weapon
+    weapon = turtle.Turtle()
+    weapon.speed(0)
+    weapon.hideturtle()
+    weapon.shape("arrow")
+    weapon.shapesize(0.1, 0.5)
+    weapon.color("white")
+    weapon.penup()
+    weapon.goto(0, -450)
+    weapon.setheading(90)
+    weaponspeed = 5
+    weaponstate = 0
+
+    # Keyboard binding
+    screen.listen()
+    screen.onkeypress(move_right, "Right")
+    screen.onkeypress(move_left, "Left")
+    screen.onkeypress(fire_weapon, "space")
+    screen.onkeypress(pause_game, "P")
+    screen.onkeypress(pause_game, "p")
+
+    screen.update()
+
+    # Enemies
+    enemies_rows = 5
+    enemies_in_row = 11
+    enemies = [[], [], [], [], []]
+    x_origin = -220
+    y_origin = 340 - 40 * level
+    y_space = 0
+    for i in range(enemies_rows):
+        for j in range(enemies_in_row):
+            enemies[i].append(turtle.Turtle())
+        x_space = 0
+        for enemy in enemies[i]:
+            if y_space == 0:
+                enemy.shape(".\Images\_enemy_3.gif")
+            elif y_space < -80:
+                enemy.shape(".\Images\_enemy_1.gif")
+            else:
+                enemy.shape(".\Images\_enemy_2.gif")
+            enemy.speed(0)
+            enemy.penup()
+            enemy.goto(x_origin + x_space, y_origin + y_space)
+            x_space += 40
+        y_space -= 40
+    speed_in = 0
+    x_speed = 0.1
+    y_speed = 40
+    e_alive = enemies_rows * enemies_in_row
+    
+    # Level loop
+    disc_pen.write(f"Level {level}", False, align="center", font=("Courier", 28, "normal"))
+    time.sleep(3)
+    disc_pen.clear()
+    next_lvl = False
+    while not next_lvl:
+        screen.update()
+        
+        # Move enemies
+        for i in range(enemies_rows):
+            temp_lis = enemies[0].copy()
+            for enemy in enemies[i]:
+                enemy.setx(enemy.xcor() + x_speed)
+
+                # Check for a hit
+                if is_hit(weapon, enemy):
+                    winsound.PlaySound(".\Sounds\s_explod.wav", winsound.SND_ASYNC)
+                    weapon.hideturtle()
+                    weaponstate = 0
+                    weapon.goto(0, -450)
+                    e_alive -= 1
+                    speed_in += 1
+                    if i == 0:
+                        temp_lis = [k for k in enemies[0] if k != enemy]
+                    enemy.goto(0, 1500)
+                    # Update score
+                    if i < 1:
+                        scorecor[0] += 30
+                    elif i < 3:
+                        scorecor[0] += 20
+                    else:
+                        scorecor[0] += 10
+                    score_str = score_str = f"Score: {scorecor[0]}\t\t\tRecord: {scorecor[1]}"
+                    score_pen.clear()
+                    score_pen.write(score_str, False, align="center", font=("Courier", 12, "normal"))
+
+                # Check for enemy reaching player
+                if is_hit(player, enemy) or enemy.ycor() <= player.ycor():
+                    winsound.PlaySound(".\Sounds\s_life.wav", winsound.SND_ASYNC)
+                    if lifes == 2:
+                        lifelost(life2)
+                    elif lifes == 1:
+                        lifelost(life1)
+                    else:
+                        screen.update()
+                        disc_pen.write(
+                            f"GAME OVER", False, align="center", font=("Courier", 28, "normal")
+                            )
+                        time.sleep(3)
+                        disc_pen.clear()
+                        print('Game Over')
+                        if scorecor[0] > scorecor[1]:
+                            disc_pen.write(
+                                f"New Record: {scorecor[0]}", False, align="center", font=("Courier", 28, "normal")
+                                )
+                            time.sleep(3)
+                            with open ('score.ttl', "w") as f:
+                                f.write(str(0) + "\n" + str(scorecor[0]))
+                        else:
+                            with open ('score.ttl', "w") as f:
+                                f.write(str(0) + "\n" + str(scorecor[1]))
+                        gameover = True
+                        next_lvl = True
+                    break
+            enemies[0] = temp_lis.copy()
+        
+        # Speed increase
+        if speed_in == 7:
+            speed_in = 0
+            if x_speed > 0:
+                x_speed += 0.01
+            else:
+                x_speed -= 0.01
+
+        # Level & Wall bump
+        if e_alive == 0:
+            # Next level
+            print('Next Level')
+            level += 1
+            next_lvl = True
+            with open ('score.ttl', "w") as f:
+                f.write(str(scorecor[0]) + "\n" + str(scorecor[1]))
+            turtle.clearscreen()
+            for i in range(enemies_rows):
+                for enemy in enemies[i]:
+                    del enemy
+        else:
+            # Check wall bump
+            if enemies[0][0].xcor() > 235 or enemies[0][len(enemies[0])-1].xcor() > 235:
+                x_speed *= -1
+                for i in range(enemies_rows):
+                    for enemy in enemies[i]:
+                        enemy.sety(enemy.ycor() - y_speed)
+            elif enemies[0][0].xcor() < -235 or enemies[0][len(enemies[0])-1].xcor() < -235:
+                x_speed *= -1
+                for i in range(enemies_rows):
+                    for enemy in enemies[i]:
+                        enemy.sety(enemy.ycor() - y_speed)
+
+        # Move missile
+        if weaponstate == 1:
+            weapon.showturtle()
+            weapon.sety(weapon.ycor() + weaponspeed)
+        if weapon.ycor() > 340:
+            weapon.hideturtle()
+            weaponstate = 0
+            weapon.goto(0, -450)

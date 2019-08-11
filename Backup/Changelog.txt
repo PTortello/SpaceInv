@@ -1,0 +1,41 @@
+0.0
+- Alpha version with geometric shapes
+
+0.1
+- Beta version with images and sounds
+- Original release based on Christian Thompson's creation
+
+0.2
+- Score record implemented
+- Rows of enemies implemented
+- Level change implemented
+- Image path fixes
+- Sound path fixes
+- Minor bug fixes
+
+0.3
+- Enemy speed increase implemented
+- Score record improvement
+- Screen size change
+- Minor bug fixes
+
+0.4
+- Life implemented
+- Pause implemented
+- Weapon speed tweak
+
+0.5
+- Enemy fire implemented
+- Level cycle implemented
+- Overall image improvement
+- Enemy speed increase tweak
+- Play area tweak
+- First row bug fixed
+- PEP 8 Style applied
+
+0.6
+- Score record improvement
+- Overall image improvement
+- Minor code tweak
+
+1.0 - Release
