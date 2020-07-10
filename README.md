@@ -1,4 +1,4 @@
 # SpaceInv
 Old school Space Invaders game
 
-![image](/space_inv.png)
+<img src="space_inv.png" alt="drawing" width="400"/>
