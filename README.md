@@ -1,5 +1,5 @@
 # SpaceInv
-Old school Space Invaders game
+Old school Space Invaders game.
 
 
 ### Keymap
